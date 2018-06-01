@@ -30,6 +30,53 @@ _D_Z = 100
 
 def train():
 
+	# Make z vector
+	z = torch.randn(batch_size, z_dim)
+
+
+'''
+	Create Generator
+	post-processing not implemented
+'''
+	G_z = WaveGANGenerator(z, train=True, **args.wavegan_g_kwargs)
+
+
+'''
+	Make Real and Face"
+'''
+
+
+
+
+
+'''
+	Create Loss
+'''
+
+
+'''
+	Create (recommended optimizer)
+'''
+	if args.wavegan_loss == 'dcgan':
+		g_optimizer = torch.optim.Adam(D.parameters(), lr = 2e-4, betas = (0.5,0.9))
+		d_optimizer = torch.optim.Adam(G.parameters(), lr = 2e-4, betas = (0.5,0.9)) 
+
+	elif args.wavegan_loss == 'lsgan':
+		g_optimizer = torch.optim.Adam(D.parameters(), lr = 1e-4)
+		d_optimizer = torch.optim.Adam(G.parameters(), lr = 1e-4)
+
+	elif args.wavegan_loss == 'wgan':
+		g_optimizer = torch.optim.Adam(D.parameters(), lr = 5e-5)
+		d_optimizer = torch.optim.Adam(G.parameters(), lr = 5e-5)
+
+	elif args.wavegan_loss == 'wgan-gp':
+		g_optimizer = torch.optim.Adam(D.parameters(), lr = 1e-4, betas = (0.5,0.9))
+		d_optimizer = torch.optim.Adam(G.parameters(), lr = 1e-4, betas = (0.5,0.9))
+	else:
+		raise NotImplementedError()
+
+	
+
 
 
 def infer():
@@ -104,13 +151,30 @@ if __name__ == '__main__':
 	preview_n=32,
 	)
 
+	args = parser.parse_args()
+
 	# Make train dir
 	if not os.path.isdir(args.train_dir):
-	os.makedirs(args.train_dir)
+		os.makedirs(args.train_dir)
 
 	# Save args
 	with open(os.path.join(args.train_dir, 'args.txt'), 'w') as f:
-	f.write('\n'.join([str(k) + ',' + str(v) for k, v in sorted(vars(args).items(), key=lambda x: x[0])]))
+		f.write('\n'.join([str(k) + ',' + str(v) for k, v in sorted(vars(args).items(), key=lambda x: x[0])]))
+
+
+	# Make model kwarg dicts
+	setattr(args, 'wavegan_g_kwargs', {
+		'kernel_len': args.wavegan_kernel_len,
+		'dim': args.wavegan_dim,
+		'use_batchnorm': args.wavegan_batchnorm,
+		'upsample': args.wavegan_genr_upsample
+	})
+	setattr(args, 'wavegan_d_kwargs', {
+		'kernel_len': args.wavegan_kernel_len,
+		'dim': args.wavegan_dim,
+		'use_batchnorm': args.wavegan_batchnorm,
+		'phaseshuffle_rad': args.wavegan_disc_phaseshuffle
+	})
 
 	if args.mode == 'train':
 		infer(args)
