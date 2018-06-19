@@ -1,5 +1,5 @@
 # pytorch-WaveGAN
-A pytorch implementation of WaveGAN 
+A pytorch implementation of WaveGAN (Not Completed)
 https://arxiv.org/abs/1802.04208
 
 WaveGAN is first approach to synthesize raw audio using GAN.
