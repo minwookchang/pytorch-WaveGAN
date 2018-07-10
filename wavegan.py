@@ -181,8 +181,7 @@ class WaveGAN(object):
         
 
 
-
-
+#This is changes
 
 
 
