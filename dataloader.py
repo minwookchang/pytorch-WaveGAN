@@ -1,8 +1,11 @@
 from torch.utils.data import DataLoader
-
+from torch.utils import data as torchData
+import torch
+import librosa
+import os
+import random 
 
 path_dir = "./data_split/"
-
 
 class AudioLoader(torchData.Dataset):
     
@@ -26,10 +29,12 @@ class AudioLoader(torchData.Dataset):
     
     def __getitem__(self, idx):
         
-        y, sr = librosa.load(self.inPath+self.files[idx], 16000)
+        y, sr = librosa.load(self.inPath+"/"+self.files[idx], 16000)
         y = torch.from_numpy(y)
-
         return y
     
     def __len__(self):
         return self.len
+
+    def __iter__(self):
+        return iter(range(self.len))
