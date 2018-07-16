@@ -31,10 +31,6 @@ class AudioLoader(torchData.Dataset):
     def __getitem__(self, idx):
         
         y, _ = librosa.load(self.inPath+"/"+self.files[idx], 16000)
-        #Normalize [-1,1]
-        max_amp = np.max(np.abs(y))
-        if max_amp > 1:
-            y /= max_amp
         y = torch.from_numpy(y)
         return y
 
