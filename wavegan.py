@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from torch.autograd import grad
 from torch.utils import data as torchData
 from dataloader import AudioLoader
+import librosa
 
 lr = 0.0001
 max_epoch = 20
@@ -65,9 +66,7 @@ class WaveGAN_Generator(nn.Module):
         out = F.relu(self.deconv3(out))  # (?, 1024, 2d)
         out = F.relu(self.deconv4(out))  # (?, 4096, d)
         out = F.tanh(self.deconv5(out))  # (?, 16384, c)
-        print(out.size())
         out = self.pp_filter(F.pad(out, (256,255)))
-        print(out.size())
         return out
 
 def conv(c_in, c_out, k_size, stride=4, pad=1,bn=True):
@@ -291,8 +290,8 @@ class WaveGAN(object):
 
             self.train_hist['per_epoch_time'].append(time.time() - epoch_start_time)
             #TODO
-            #with torch.no_grad():
-                #self.visualize_results((epoch+1))
+            with torch.no_grad():
+                self.visualize_results_audio((epoch+1))
 
         self.train_hist['total_time'].append(time.time() - start_time)
         print("Avg one epoch time: %.2f, total %d epochs time: %.2f" % (np.mean(self.train_hist['per_epoch_time']),
@@ -304,6 +303,39 @@ class WaveGAN(object):
         #                         self.epoch)
         print(self.train_hist)
         utils.loss_plot(self.train_hist, os.path.join(self.save_dir, self.dataset, self.model_name), self.model_name)
+
+    def visualize_results_audio(self, epoch, fix=True):
+        self.G.eval()
+
+        if not os.path.exists(self.result_dir + '/' + self.dataset + '/' + self.model_name):
+            os.makedirs(self.result_dir + '/' + self.dataset + '/' + self.model_name)
+
+        tot_num_samples = min(self.sample_num, self.batch_size)
+        image_frame_dim = int(np.floor(np.sqrt(tot_num_samples)))
+
+        if fix:
+            """ fixed noise """
+            samples = self.G(self.sample_z_)
+        else:
+            """ random noise """
+            sample_z_ = torch.rand((self.batch_size, self.z_dim))
+            if self.gpu_mode:
+                sample_z_ = sample_z_.cuda()
+
+            samples = self.G(sample_z_)
+
+        print("sample_size", samples.size())
+#        print(samples.size())
+        #if self.gpu_mode:
+        #    samples = samples.cpu().data.numpy().transpose(0, 2, 3, 1)
+        #else:
+        # samples = samples.data.numpy().transpose(0, 2, 3, 1)
+        samples = samples.data.numpy()
+        
+#        samples = (samples + 1) / 2
+        librosa.output.write_wav( self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name + '_epoch%03d' % epoch + '.wav',samples[0][0],sr=16000)
+        #utils.save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
+        #self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name + '_epoch%03d' % epoch + '.png')
 
     def visualize_results(self, epoch, fix=True):
         self.G.eval()
@@ -334,6 +366,8 @@ class WaveGAN(object):
         samples = (samples + 1) / 2
         utils.save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
                           self.result_dir + '/' + self.dataset + '/' + self.model_name + '/' + self.model_name + '_epoch%03d' % epoch + '.png')
+
+
 
     def save(self):
         save_dir = os.path.join(self.save_dir, self.dataset, self.model_name)

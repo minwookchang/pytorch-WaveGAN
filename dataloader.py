@@ -4,6 +4,7 @@ import torch
 import librosa
 import os
 import random 
+import numpy as np
 
 path_dir = "./data_split/"
 
@@ -29,10 +30,14 @@ class AudioLoader(torchData.Dataset):
     
     def __getitem__(self, idx):
         
-        y, sr = librosa.load(self.inPath+"/"+self.files[idx], 16000)
+        y, _ = librosa.load(self.inPath+"/"+self.files[idx], 16000)
+        #Normalize [-1,1]
+        max_amp = np.max(np.abs(y))
+        if max_amp > 1:
+            y /= max_amp
         y = torch.from_numpy(y)
         return y
-    
+
     def __len__(self):
         return self.len
 
