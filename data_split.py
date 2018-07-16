@@ -2,6 +2,7 @@
 
 import os
 import librosa
+import numpy as np
 
 path_dir = "./data/"
 output_dir = "./data_split/"
@@ -51,5 +52,10 @@ for idx1 in range(len(data_list_1)):
         # 시간 계산
         curr_time = data_list_1[idx1][idx2]
         output_path = output_dir + txt_files[idx1][:-9]+data_list_2[idx1][idx2]+"_"+data_list_3[idx1][idx2]+"_"+str(idx1)+"_"+str(idx2)+".wav"
-        print(output_path)
-        librosa.output.write_wav(output_path, y[int(sr*curr_time):int(sr*curr_time)+16384],sr)
+#        print(output_path)
+        #Normalize [-1,1]
+        temp = y[int(sr*curr_time):int(sr*curr_time)+16384]
+        max_amp = np.max(np.abs(temp))
+        if max_amp > 1:
+            temp /= max_amp
+        librosa.output.write_wav(output_path, temp,sr)
