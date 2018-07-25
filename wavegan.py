@@ -180,7 +180,7 @@ class WaveGAN(object):
         self.input_size = args.input_size
         self.z_dim = 100
         self.lambda_ = 10
-        self.n_critic = 1 # the number of iterations of the critic per generator iteration
+        self.n_critic = 3 # the number of iterations of the critic per generator iteration
 
         #load dataset
         self.dataset = "test0"
